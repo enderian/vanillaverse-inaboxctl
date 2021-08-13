@@ -61,23 +61,21 @@ func before(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	projectDir := path.Dir(viper.ConfigFileUsed())
+	viper.SetDefault("name", path.Base(projectDir))
+
 	// Set the default config values
 	viper.BindPFlag("verbose", cmd.Flags().Lookup("verbose"))
 
-	viper.SetDefault("root_path", fmt.Sprintf("/srv/inabox/%s", os.Getenv("USER")))
-
+	viper.SetDefault("deploy.root", fmt.Sprintf("/srv/inabox/%s", os.Getenv("USER")))
+	viper.SetDefault("deploy.local", projectDir)
+	viper.SetDefault("deploy.remote", path.Join(viper.GetString("deploy.root"), "projects", viper.GetString("name")))
 	viper.SetDefault("deploy.port", 22)
-	viper.SetDefault("deploy.exclude_files", []string{".git"})
+	viper.SetDefault("deploy.exclude_files", []string{".git", ".gradle", ".bundle", "build", "node_modules"})
 
 	viper.SetDefault("compose.file", "docker-compose.yml")
 	viper.SetDefault("compose.services", "docker-compose.services.yml")
 	viper.SetDefault("compose.project", fmt.Sprintf("inabox_%s", os.Getenv("USER")))
-
-	dir := path.Dir(viper.ConfigFileUsed())
-	// Project defaults
-	viper.SetDefault("name", path.Base(dir))
-	viper.SetDefault("local_path", dir)
-	viper.SetDefault("remote_path", path.Join(viper.GetString("root_path"), "projects", viper.GetString("name")))
 }
 
 func proxy(cmd *cobra.Command, args []string) {

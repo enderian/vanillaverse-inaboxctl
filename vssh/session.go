@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type Session struct {
@@ -25,8 +26,12 @@ func (s *Session) Console(command string) error {
 		fmt.Printf("executing (ssh,console): %s\n", command)
 	}
 
+	width, height, err := terminal.GetSize(int(os.Stdin.Fd()))
+	if err != nil {
+		return fmt.Errorf("could not get terminal size: %v", err)
+	}
 	// Get a pseudo-terminal
-	if err := session.RequestPty(fmt.Sprintf("xterm-256color"), 80, 40, ssh.TerminalModes{}); err != nil {
+	if err := session.RequestPty(fmt.Sprintf("xterm-256color"), width, height, ssh.TerminalModes{}); err != nil {
 		return fmt.Errorf("request for pseudo terminal failed: %v", err)
 	}
 

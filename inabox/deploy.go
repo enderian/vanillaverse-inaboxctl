@@ -12,7 +12,7 @@ import (
 )
 
 // Deploy runs the deploy pipeline to inabox.
-func Deploy(services []string, pull bool, build bool, detach bool) error {
+func Deploy(services []string, pull bool, build bool, detach bool, no_hooks bool) error {
 	fmt.Println("Syncing files with inabox...")
 	if err := syncFiles(); err != nil {
 		return fmt.Errorf("error while syncing files: %v", err)
@@ -50,10 +50,17 @@ func Deploy(services []string, pull bool, build bool, detach bool) error {
 		return fmt.Errorf("no service containers detected, please specify them explicitly")
 	}
 
+	// Stop services first
+	fmt.Printf("Stopping %s...\n", strings.Join(compose.Services, ", "))
+	err = ssh.Run(compose.Command("stop"))
+	if err != nil {
+		return fmt.Errorf("error while stopping services: %v", err)
+	}
+
 	// Run pre-deploy hooks
-	if hook := viper.GetString("deploy.pre_hook"); hook != "" {
+	if hook := viper.GetString("deploy.pre_hook"); !no_hooks && hook != "" {
 		fmt.Println("Running pre-deploy hook...")
-		if err := ssh.Run(fmt.Sprintf("cd %s && %s", viper.GetString("remote_path"), hook)); err != nil {
+		if err := ssh.Run(fmt.Sprintf("cd %s && %s", viper.GetString("deploy.remote"), hook)); err != nil {
 			return fmt.Errorf("error while running pre-deploy hook: %v", err)
 		}
 	}
@@ -95,21 +102,22 @@ func Deploy(services []string, pull bool, build bool, detach bool) error {
 
 // syncFiles syncs the files between the local project directory and inabox.
 func syncFiles() error {
-	rsync := exec.Command(
-		"rsync",
-		"--delete", "--progress", "-arzh",
-		"--exclude", ".git",
-		fmt.Sprintf(
-			"%s/",
-			viper.GetString("local_path"),
-		),
-		fmt.Sprintf(
-			"%s@%s:%s",
-			viper.GetString("deploy.user"),
-			viper.GetString("deploy.host"),
-			viper.GetString("remote_path"),
-		),
-	)
+	args := []string{"--delete", "--progress", "-arzh"}
+	for _, excluded := range viper.GetStringSlice("deploy.exclude_files") {
+		args = append(args, "--exclude", excluded)
+	}
+	args = append(args, fmt.Sprintf(
+		"%s/",
+		viper.GetString("deploy.local"),
+	))
+	args = append(args, fmt.Sprintf(
+		"%s@%s:%s",
+		viper.GetString("deploy.user"),
+		viper.GetString("deploy.host"),
+		viper.GetString("deploy.remote"),
+	))
+
+	rsync := exec.Command("rsync", args...)
 
 	// Verbose logging
 	if viper.GetBool("verbose") {

@@ -17,9 +17,9 @@ func Environment() map[string]string {
 	}
 
 	// Directories
-	contents["INABOX_ROOT"] = viper.GetString("root_path")
+	contents["INABOX_ROOT"] = viper.GetString("deploy.root")
 	contents["INABOX_PROJECT"] = viper.GetString("name")
-	contents["INABOX_PROJECT_DIR"] = viper.GetString("remote_path")
+	contents["INABOX_PROJECT_DIR"] = viper.GetString("deploy.remote")
 	return contents
 }
 

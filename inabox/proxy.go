@@ -16,5 +16,5 @@ func Proxy(args []string) error {
 	compose := NewCompose()
 	compose.WithProject()
 	compose.WithServices()
-	return ssh.Run(compose.Command(args...))
+	return ssh.Console(compose.Command(args...))
 }

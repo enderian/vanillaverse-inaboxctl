@@ -23,11 +23,11 @@ func NewCompose() *ComposeBuilder {
 }
 
 func (b *ComposeBuilder) WithServices() {
-	b.servicesComposeFile = path.Join(viper.GetString("root_path"), viper.GetString("compose.services"))
+	b.servicesComposeFile = path.Join(viper.GetString("deploy.root"), viper.GetString("compose.services"))
 }
 
 func (b *ComposeBuilder) WithProject() {
-	b.composeFile = path.Join(viper.GetString("remote_path"), viper.GetString("compose.file"))
+	b.composeFile = path.Join(viper.GetString("deploy.remote"), viper.GetString("compose.file"))
 }
 
 func (b *ComposeBuilder) Command(arguments ...string) string {
