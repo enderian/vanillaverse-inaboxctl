@@ -31,6 +31,7 @@ func init() {
 
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(consoleCmd)
+	rootCmd.AddCommand(environCmd)
 }
 
 func before(cmd *cobra.Command, args []string) {
